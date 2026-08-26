@@ -20,6 +20,40 @@ export default function SilverJewelleryPage({ onOpenWhatsApp }) {
         </p>
       </section>
 
+      {/* Visual Showcase Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#C5A059]/40 grid grid-cols-1 lg:grid-cols-12">
+          <div className="lg:col-span-6 h-[320px] sm:h-[400px]">
+            <img
+              src="/silver-jewellery.jpg"
+              alt="Traditional Indian 92.5 Sterling Silver Anklets & Men's Kada"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="lg:col-span-6 bg-[#3B101C] text-white p-8 sm:p-12 flex flex-col justify-center space-y-6">
+            <span className="text-[#DFBA6A] text-xs font-bold uppercase tracking-[0.2em] block">
+              Pure 92.5 Hallmarked Silver
+            </span>
+            <h2 className="font-serif-luxury text-3xl sm:text-4xl font-bold">
+              Men's Silver Kadas, Heavy Chains & Traditional Anklets
+            </h2>
+            <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-light">
+              Crafted with authentic 92.5 silver purity, our silver line features solid bangles, payal anklets with bells, 
+              durable chains, and customary pooja items.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={onOpenWhatsApp}
+                className="px-6 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" /> Enquire Silver Range on WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Grid Items */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {SILVER_JEWELLERY_ITEMS.map((item) => (

@@ -8,25 +8,25 @@ export default function BeadsPearlsPage({ onOpenWhatsApp }) {
       title: "Precious Gemstone Beads",
       subtitle: "Ruby, Emerald & Sapphire Strings",
       description: "Fine hand-cut and smooth polished beads of natural rubies, emeralds, and sapphires strung in single, multi-strand, or gold-interspersed designs.",
-      image: "/silver-pearls.png"
+      image: "/precious-beads.jpg"
     },
     {
       title: "Hyderabadi Basra & South Sea Pearls",
       subtitle: "Secunderabad's Pearl Legacy",
       description: "Lustrous natural and cultured pearls carrying Secunderabad's historic pearl tradition. Available in classic multi-strand necklaces, chokers, and pendant drops.",
-      image: "/silver-pearls.png"
+      image: "/basra-pearls.jpg"
     },
     {
       title: "Natural Italian Red Coral (Pagam)",
       subtitle: "Natural Coral Beads & Cabochons",
       description: "Authentic deep red Italian corals selected for smooth texture, astrological purity, and gold-encased traditional stringing.",
-      image: "/silver-pearls.png"
+      image: "/italian-coral.jpg"
     },
     {
       title: "Semi-Precious Specialty Beads",
       subtitle: "Tourmaline, Turquoise, Garnet & Jade",
       description: "A wide variety of colorful semi-precious beads for custom neckpieces, layered malas, and contemporary statement jewellery.",
-      image: "/silver-pearls.png"
+      image: "/precious-beads.jpg"
     }
   ];
 

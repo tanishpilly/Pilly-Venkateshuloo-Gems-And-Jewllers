@@ -20,7 +20,7 @@ export const CATEGORIES = [
     name: "92.5 Sterling Silver",
     tagline: "Traditional, Contemporary & Men's Silver Collection",
     description: "Exquisite 92.5 sterling silver jewellery, men's silver kadas and chains, traditional pooja articles, and contemporary ornaments.",
-    image: "/silver-pearls.png",
+    image: "/silver-jewellery.jpg",
     count: "92.5 Hallmarked"
   },
   {
@@ -28,7 +28,7 @@ export const CATEGORIES = [
     name: "Beads, Pearls & Corals",
     tagline: "Precious Gemstone Beads & Hyderabadi Basra Pearls",
     description: "Fine selections of precious and semi-precious beads, lustrous South Sea and Hyderabadi pearls, and natural Italian red coral.",
-    image: "/silver-pearls.png",
+    image: "/precious-beads.jpg",
     count: "Specialist House"
   }
 ];
@@ -77,7 +77,7 @@ export const GEMSTONE_ITEMS = [
     type: "Natural & Cultured Pearls",
     description: "Lustrous white and golden pearls carrying Secunderabad's iconic pearl legacy, available in multi-strand strings and studded settings.",
     certification: "Authenticity Guaranteed",
-    image: "/silver-pearls.png"
+    image: "/basra-pearls.jpg"
   },
   {
     id: "coral",
@@ -86,7 +86,7 @@ export const GEMSTONE_ITEMS = [
     type: "Natural Organic Gemstone",
     description: "Premium natural Italian red corals cut into cabs and beads, suitable for customary rings and gold-encased pendants.",
     certification: "Natural Coral Certified",
-    image: "/silver-pearls.png"
+    image: "/italian-coral.jpg"
   }
 ];
 
