@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #1C1B1A;
+    background-color: #FAF8F5;
+  }
+  
+  h1, h2, h3, h4, .font-serif-luxury {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+}
+
+/* Custom luxury gold & burgundy utilities */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #DFBA6A 0%, #C5A059 50%, #9E7934 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #C5A059 50%, #B38F43 100%);
+}
+
+.bg-gold-shimmer {
+  background: linear-gradient(135deg, #F3E5C8 0%, #DFBA6A 40%, #C5A059 70%, #FAF8F5 100%);
+}
+
+.bg-burgundy-dark {
+  background-color: #2D0A14;
+}
+
+.bg-burgundy-rich {
+  background-color: #3B101C;
+}
+
+.border-gold-subtle {
+  border-color: rgba(197, 160, 89, 0.3);
+}
+
+.border-gold-glow {
+  border-color: rgba(212, 175, 55, 0.6);
+}
+
+/* Smooth luxury transitions */
+.transition-luxury {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Glassmorphic card styling */
+.glass-burgundy {
+  background: rgba(45, 10, 20, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(197, 160, 89, 0.25);
+}
+
+.glass-cream {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(197, 160, 89, 0.2);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF8F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #C5A059;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B101C;
+}
