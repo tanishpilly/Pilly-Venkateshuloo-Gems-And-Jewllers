@@ -1,9 +1,39 @@
 -- ==============================================================================
 -- SUPABASE DATABASE & STORAGE SETUP SCRIPT
--- Pilly Venkateshuloo Gems and Jewellers - Admin CMS & Cloud Storage
+-- Pilly Venkateshuloo Gems and Jewellers - Secure Admin CMS & Storage
 -- ==============================================================================
 
--- 1. CREATE CATEGORIES TABLE
+-- 1. CREATE ADMIN AUTHORIZATION TABLE
+-- Ensures merely creating a Supabase user does NOT grant admin permissions.
+CREATE TABLE IF NOT EXISTS public.admin_users (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS on admin_users table
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Admins can view the admin_users table
+DROP POLICY IF EXISTS "Admins can view admin_users" ON public.admin_users;
+CREATE POLICY "Admins can view admin_users"
+    ON public.admin_users
+    FOR SELECT
+    TO authenticated
+    USING (auth.uid() = user_id);
+
+-- Helper Function: Returns TRUE if the current user is an authorized admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.admin_users
+        WHERE user_id = auth.uid()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 2. CREATE CATEGORIES TABLE
 CREATE TABLE IF NOT EXISTS public.categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
@@ -23,7 +53,7 @@ INSERT INTO public.categories (name) VALUES
     ('Custom Jewellery')
 ON CONFLICT (name) DO NOTHING;
 
--- 2. CREATE DESIGNS TABLE (STRICTLY NO PRICE FIELD)
+-- 3. CREATE DESIGNS TABLE (STRICTLY NO PRICE FIELD)
 CREATE TABLE IF NOT EXISTS public.designs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
@@ -39,42 +69,42 @@ CREATE TABLE IF NOT EXISTS public.designs (
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.designs ENABLE ROW LEVEL SECURITY;
 
--- 3. ROW LEVEL SECURITY (RLS) POLICIES FOR DESIGNS
--- PUBLIC CUSTOMERS: Can only view PUBLISHED designs (status = 'published')
+-- 4. ROW LEVEL SECURITY (RLS) POLICIES FOR DESIGNS
+-- PUBLIC CUSTOMERS: Read-only access restricted strictly to PUBLISHED designs (status = 'published')
 DROP POLICY IF EXISTS "Public users can view published designs" ON public.designs;
 CREATE POLICY "Public users can view published designs"
     ON public.designs
     FOR SELECT
     USING (status = 'published');
 
--- AUTHENTICATED ADMINS: Full access (Select, Insert, Update, Delete) to all designs
+-- AUTHORIZED ADMINS ONLY: Full access (Select, Insert, Update, Delete)
 DROP POLICY IF EXISTS "Admins have full access to designs" ON public.designs;
 CREATE POLICY "Admins have full access to designs"
     ON public.designs
     FOR ALL
     TO authenticated
-    USING (true)
-    WITH CHECK (true);
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
 
--- 4. ROW LEVEL SECURITY (RLS) POLICIES FOR CATEGORIES
--- PUBLIC CUSTOMERS: Can view categories
+-- 5. ROW LEVEL SECURITY (RLS) POLICIES FOR CATEGORIES
+-- PUBLIC CUSTOMERS: Read-only access to categories
 DROP POLICY IF EXISTS "Public users can view categories" ON public.categories;
 CREATE POLICY "Public users can view categories"
     ON public.categories
     FOR SELECT
     USING (true);
 
--- AUTHENTICATED ADMINS: Can manage categories
+-- AUTHORIZED ADMINS ONLY: Can create and manage categories
 DROP POLICY IF EXISTS "Admins can manage categories" ON public.categories;
 CREATE POLICY "Admins can manage categories"
     ON public.categories
     FOR ALL
     TO authenticated
-    USING (true)
-    WITH CHECK (true);
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
 
--- 5. STORAGE BUCKET CREATION FOR IMAGES
--- Create a public bucket 'jewellery-designs' for high-resolution images
+-- 6. STORAGE BUCKET CREATION FOR IMAGES
+-- Create public bucket 'jewellery-designs' for high-resolution images
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('jewellery-designs', 'jewellery-designs', true)
 ON CONFLICT (id) DO NOTHING;
@@ -87,34 +117,44 @@ CREATE POLICY "Public access to jewellery images"
     FOR SELECT
     USING (bucket_id = 'jewellery-designs');
 
--- Authenticated Admin upload access
+-- AUTHORIZED ADMINS ONLY: Upload images
 DROP POLICY IF EXISTS "Admins can upload jewellery images" ON storage.objects;
 CREATE POLICY "Admins can upload jewellery images"
     ON storage.objects
     FOR INSERT
     TO authenticated
-    WITH CHECK (bucket_id = 'jewellery-designs');
+    WITH CHECK (bucket_id = 'jewellery-designs' AND public.is_admin());
 
--- Authenticated Admin update access
+-- AUTHORIZED ADMINS ONLY: Update images
 DROP POLICY IF EXISTS "Admins can update jewellery images" ON storage.objects;
 CREATE POLICY "Admins can update jewellery images"
     ON storage.objects
     FOR UPDATE
     TO authenticated
-    USING (bucket_id = 'jewellery-designs');
+    USING (bucket_id = 'jewellery-designs' AND public.is_admin());
 
--- Authenticated Admin delete access
+-- AUTHORIZED ADMINS ONLY: Delete images
 DROP POLICY IF EXISTS "Admins can delete jewellery images" ON storage.objects;
 CREATE POLICY "Admins can delete jewellery images"
     ON storage.objects
     FOR DELETE
     TO authenticated
-    USING (bucket_id = 'jewellery-designs');
+    USING (bucket_id = 'jewellery-designs' AND public.is_admin());
 
 -- ==============================================================================
--- INSTRUCTIONS FOR CREATING THE FIRST ADMIN USER:
+-- INSTRUCTIONS TO REGISTER THE FIRST ADMIN USER (pillyvenkateshuloogemsjeweller@gmail.com):
+--
+-- STEP A: Create User in Supabase Auth
 -- 1. Go to Supabase Dashboard -> Authentication -> Users.
 -- 2. Click "Add User" -> "Create User".
--- 3. Enter Email: pillyvenkateshuloogemsjeweller@gmail.com (or your owner email)
---    and set a strong admin password.
+-- 3. Enter Email: pillyvenkateshuloogemsjeweller@gmail.com
+-- 4. Set a strong, private password (e.g. 12+ characters).
+-- 5. Copy the generated User ID (UUID) for this user.
+--
+-- STEP B: Grant Admin Privileges in SQL Editor
+-- Run the following SQL statement (replacing 'YOUR_USER_ID_HERE' with the copied UUID):
+--
+-- INSERT INTO public.admin_users (user_id, email)
+-- VALUES ('YOUR_USER_ID_HERE', 'pillyvenkateshuloogemsjeweller@gmail.com')
+-- ON CONFLICT (email) DO NOTHING;
 -- ==============================================================================
