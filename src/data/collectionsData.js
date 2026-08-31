@@ -41,7 +41,7 @@ export const GEMSTONE_ITEMS = [
     type: "Natural Precious Gemstone",
     description: "Deep red natural rubies selected for clarity, color, and astrological purity. Custom-set into rings, pendants, and neckpieces.",
     certification: "Laboratory Certification Available",
-    image: "/gemstones-display.png"
+    image: "/ruby-gemstones.jpg"
   },
   {
     id: "emerald",
@@ -50,7 +50,7 @@ export const GEMSTONE_ITEMS = [
     type: "Natural Precious Gemstone",
     description: "Vibrant green emeralds possessing exceptional luster and depth. Renowned for custom bridal jewellery and gemstone settings.",
     certification: "Laboratory Certification Available",
-    image: "/gemstones-display.png"
+    image: "/emerald-gemstones.jpg"
   },
   {
     id: "sapphire",
@@ -59,7 +59,7 @@ export const GEMSTONE_ITEMS = [
     type: "Natural Precious Gemstone",
     description: "Unheated natural sapphires chosen for brilliance, cuts, and astrological suitability. Certified for authenticity.",
     certification: "Laboratory Certification Available",
-    image: "/gemstones-display.png"
+    image: "/sapphire-gemstones.jpg"
   },
   {
     id: "navratna",
@@ -68,7 +68,7 @@ export const GEMSTONE_ITEMS = [
     type: "Astrological Gemstone Set",
     description: "Harmonious combinations of nine precious stones custom-crafted into traditional rings, pendants, and bracelets.",
     certification: "Individual Stone Certification",
-    image: "/gemstones-display.png"
+    image: "/navratna-gemstones.jpg"
   },
   {
     id: "pearls",
