@@ -24,7 +24,7 @@ export default function Footer({ setActiveTab, onOpenWhatsApp }) {
   };
 
   return (
-    <footer className="bg-[#2D0A14] text-[#F3EEEA] pt-16 pb-24 md:pb-12 border-t border-[#C5A059]/30 relative overflow-hidden">
+    <footer className="bg-[#2D0A14] text-[#F3EEEA] pt-16 pb-24 md:pb-12 border-t border-[#C5A059]/30 relative overflow-hidden font-sans">
       {/* Decorative Gold Accent Bar */}
       <div className="h-1 w-full bg-gradient-to-r from-[#2D0A14] via-[#C5A059] to-[#2D0A14] absolute top-0 left-0"></div>
 
@@ -32,8 +32,10 @@ export default function Footer({ setActiveTab, onOpenWhatsApp }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-[#C5A059]/20">
           
           {/* Col 1: Brand Info */}
-          <div className="space-y-4">
-            <PVLogo size="lg" variant="dark" />
+          <div className="space-y-4 max-w-full">
+            <div className="flex items-center max-w-full">
+              <PVLogo size="lg" variant="dark" />
+            </div>
             <p className="text-gray-300 text-xs sm:text-sm leading-relaxed pt-2">
               For four generations since 1912, Pilly Venkateshuloo Gems and Jewellers has been serving 
               discerning families with authentic precious gemstones, customised 916 BIS Hallmarked gold, and timeless craftsmanship.

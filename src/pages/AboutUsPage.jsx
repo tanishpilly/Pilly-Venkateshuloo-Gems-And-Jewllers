@@ -21,7 +21,7 @@ export default function AboutUsPage({ onOpenWhatsApp, setActiveTab }) {
 
       {/* Leadership & Family Story */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-        <div className="bg-white p-8 sm:p-12 rounded-3xl border border-[#C5A059]/30 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="bg-white p-6 sm:p-10 lg:p-12 rounded-3xl border border-[#C5A059]/30 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-2">
@@ -53,13 +53,17 @@ export default function AboutUsPage({ onOpenWhatsApp, setActiveTab }) {
             </div>
           </div>
 
-          <div className="lg:col-span-5 text-center space-y-6 bg-[#3B101C] text-white p-8 rounded-3xl border border-[#C5A059]/40">
-            <PVLogo size="lg" variant="dark" />
-            <div className="space-y-2 pt-2">
-              <p className="font-serif-luxury text-2xl font-bold text-[#DFBA6A]">
-                Pilly Venkateshuloo
-              </p>
-              <p className="text-xs text-gray-300">
+          {/* Owner/Contact Card */}
+          <div className="lg:col-span-5 text-center space-y-6 bg-[#3B101C] text-white p-6 sm:p-8 rounded-3xl border border-[#C5A059]/40 shadow-xl overflow-hidden">
+            <div className="flex justify-center max-w-full overflow-hidden">
+              <PVLogo size="lg" variant="dark" />
+            </div>
+
+            <div className="space-y-2 pt-2 px-2">
+              <h3 className="font-serif-luxury text-xl sm:text-2xl md:text-3xl font-bold text-[#DFBA6A] tracking-wide text-center leading-tight">
+                PILLY VENKATESHULOO
+              </h3>
+              <p className="text-xs text-gray-300 font-medium">
                 Gems and Jewellers • Estd 1912
               </p>
             </div>
@@ -73,7 +77,7 @@ export default function AboutUsPage({ onOpenWhatsApp, setActiveTab }) {
             <div className="pt-2">
               <button
                 onClick={onOpenWhatsApp}
-                className="w-full py-3 bg-[#25D366] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
               >
                 <MessageCircle className="w-4 h-4" /> Connect with Raghavendra Pilly
               </button>
