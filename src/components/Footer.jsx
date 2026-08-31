@@ -34,7 +34,7 @@ export default function Footer({ setActiveTab, onOpenWhatsApp }) {
           {/* Col 1: Brand Info */}
           <div className="space-y-4 max-w-full">
             <div className="flex items-center max-w-full">
-              <PVLogo size="lg" variant="dark" />
+              <PVLogo size="md" variant="dark" />
             </div>
             <p className="text-gray-300 text-xs sm:text-sm leading-relaxed pt-2">
               For four generations since 1912, Pilly Venkateshuloo Gems and Jewellers has been serving 

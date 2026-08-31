@@ -1,7 +1,6 @@
 import React from 'react';
 import { Award, ShieldCheck, Gem, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { STORE_DETAILS } from '../data/storeDetails';
-import PVLogo from '../components/PVLogo';
 
 export default function AboutUsPage({ onOpenWhatsApp, setActiveTab }) {
   return (
@@ -55,15 +54,17 @@ export default function AboutUsPage({ onOpenWhatsApp, setActiveTab }) {
 
           {/* Owner/Contact Card */}
           <div className="lg:col-span-5 text-center space-y-6 bg-[#3B101C] text-white p-6 sm:p-8 rounded-3xl border border-[#C5A059]/40 shadow-xl overflow-hidden">
-            <div className="flex justify-center max-w-full overflow-hidden">
-              <PVLogo size="lg" variant="dark" />
-            </div>
+            <img
+              src="/pv-logo.png"
+              alt="PV Monogram Logo"
+              className="h-16 sm:h-20 mx-auto object-contain shrink-0"
+            />
 
-            <div className="space-y-2 pt-2 px-2">
-              <h3 className="font-serif-luxury text-xl sm:text-2xl md:text-3xl font-bold text-[#DFBA6A] tracking-wide text-center leading-tight">
+            <div className="space-y-1.5 px-2">
+              <h3 className="font-serif-luxury text-xl sm:text-2xl font-bold text-[#DFBA6A] tracking-wider text-center leading-tight">
                 PILLY VENKATESHULOO
               </h3>
-              <p className="text-xs text-gray-300 font-medium">
+              <p className="text-xs text-gray-300 font-medium tracking-wide">
                 Gems and Jewellers • Estd 1912
               </p>
             </div>
