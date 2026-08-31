@@ -41,14 +41,50 @@ export default function App() {
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [selectedDesignForModal, setSelectedDesignForModal] = useState(null);
 
-  // Check URL path on mount & path changes
+  // Check URL path on mount & browser navigation (popstate)
   useEffect(() => {
     const handleLocation = () => {
       const path = window.location.pathname.toLowerCase();
       if (path.startsWith('/admin')) {
         setIsAdminRoute(true);
+
+        // Subroute parsing for admin section
+        if (path.includes('/add')) {
+          setAdminTab('add-design');
+        } else if (path.includes('/designs') || path.includes('/manage-designs')) {
+          setAdminTab('manage-designs');
+        } else if (path.includes('/categories')) {
+          setAdminTab('manage-categories');
+        } else {
+          setAdminTab('dashboard');
+        }
       } else {
         setIsAdminRoute(false);
+
+        // Public path parsing
+        if (path.includes('/jewellery') || path.includes('/gold')) {
+          setActiveTab('jewellery');
+        } else if (path.includes('/gemstones')) {
+          setActiveTab('gemstones');
+        } else if (path.includes('/silver')) {
+          setActiveTab('silver');
+        } else if (path.includes('/beads') || path.includes('/pearls')) {
+          setActiveTab('beads-pearls');
+        } else if (path.includes('/heritage')) {
+          setActiveTab('heritage');
+        } else if (path.includes('/craftsmanship')) {
+          setActiveTab('craftsmanship');
+        } else if (path.includes('/services')) {
+          setActiveTab('services');
+        } else if (path.includes('/about')) {
+          setActiveTab('about');
+        } else if (path.includes('/visit')) {
+          setActiveTab('visit-us');
+        } else if (path.includes('/contact')) {
+          setActiveTab('contact');
+        } else {
+          setActiveTab('home');
+        }
       }
     };
 
@@ -90,10 +126,13 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Switch to admin view programmatically
-  const handleOpenAdminView = () => {
-    window.history.pushState({}, '', '/admin');
-    setIsAdminRoute(true);
+  const handleAdminTabChange = (tabId) => {
+    setAdminTab(tabId);
+    let path = '/admin/dashboard';
+    if (tabId === 'add-design') path = '/admin/add-design';
+    else if (tabId === 'manage-designs') path = '/admin/manage-designs';
+    else if (tabId === 'manage-categories') path = '/admin/manage-categories';
+    window.history.pushState({}, '', path);
   };
 
   const handleReturnToPublicView = () => {
@@ -102,17 +141,18 @@ export default function App() {
   };
 
   // ==============================================================================
-  // ADMIN CMS VIEW RENDER
+  // ADMIN CMS VIEW RENDER (REQUIRES SUPABASE AUTHENTICATION)
   // ==============================================================================
   if (isAdminRoute) {
     if (checkingAuth) {
       return (
-        <div className="min-h-screen bg-[#2D0A14] text-white flex items-center justify-center text-xs">
+        <div className="min-h-screen bg-[#2D0A14] text-white flex items-center justify-center text-xs font-sans">
           Authenticating owner session...
         </div>
       );
     }
 
+    // Unauthenticated access -> Shows Admin Login Screen
     if (!adminSession) {
       return (
         <AdminLogin
@@ -122,25 +162,26 @@ export default function App() {
       );
     }
 
+    // Authenticated owner session -> Renders Admin CMS Dashboard Views
     const renderAdminTabContent = () => {
       switch (adminTab) {
         case 'dashboard':
-          return <AdminDashboard onNavigateTab={setAdminTab} />;
+          return <AdminDashboard onNavigateTab={handleAdminTabChange} />;
         case 'add-design':
-          return <AdminAddDesign onNavigateTab={setAdminTab} />;
+          return <AdminAddDesign onNavigateTab={handleAdminTabChange} />;
         case 'manage-designs':
-          return <AdminManageDesigns onNavigateTab={setAdminTab} />;
+          return <AdminManageDesigns onNavigateTab={handleAdminTabChange} />;
         case 'manage-categories':
-          return <AdminManageCategories onNavigateTab={setAdminTab} />;
+          return <AdminManageCategories onNavigateTab={handleAdminTabChange} />;
         default:
-          return <AdminDashboard onNavigateTab={setAdminTab} />;
+          return <AdminDashboard onNavigateTab={handleAdminTabChange} />;
       }
     };
 
     return (
       <AdminLayout
         activeTab={adminTab}
-        setActiveTab={setAdminTab}
+        setActiveTab={handleAdminTabChange}
         session={adminSession}
         onLogout={() => setAdminSession(null)}
         onNavigatePublic={handleReturnToPublicView}
