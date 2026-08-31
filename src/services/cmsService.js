@@ -25,6 +25,34 @@ const checkSupabase = () => {
 // AUTHENTICATION & AUTHORIZATION SERVICE
 // ==============================================================================
 
+/**
+ * Verifies if a given user ID is an authorized administrator registered in public.admin_users
+ */
+export const verifyAdminUser = async (userId) => {
+  if (!userId || !isSupabaseConfigured || !supabase) return false;
+
+  try {
+    // 1. Direct query against public.admin_users for matching user_id
+    const { data: adminRows, error: adminErr } = await supabase
+      .from('admin_users')
+      .select('user_id, email')
+      .eq('user_id', userId);
+
+    if (!adminErr && adminRows && adminRows.length > 0) {
+      const match = adminRows.find((r) => r.user_id === userId);
+      if (match) return true;
+    }
+
+    // 2. Secondary RPC check if defined
+    const { data: rpcCheck } = await supabase.rpc('is_admin');
+    if (rpcCheck === true) return true;
+  } catch (e) {
+    console.error('Error verifying admin authorization:', e);
+  }
+
+  return false;
+};
+
 export const loginAdmin = async (email, password) => {
   checkSupabase();
 
@@ -37,14 +65,10 @@ export const loginAdmin = async (email, password) => {
     throw new Error(error.message);
   }
 
-  // Verify that the user is an authorized admin registered in public.admin_users
-  const { data: adminCheck, error: adminErr } = await supabase
-    .from('admin_users')
-    .select('user_id, email')
-    .eq('user_id', data.user.id)
-    .single();
+  // Verify that the logged in user's ID exists in public.admin_users
+  const isAuthorized = await verifyAdminUser(data.user.id);
 
-  if (adminErr || !adminCheck) {
+  if (!isAuthorized) {
     // Sign out unauthorized user immediately
     await supabase.auth.signOut();
     throw new Error('Access Denied: Your account is not authorized for administrator access.');
@@ -64,14 +88,9 @@ export const getAdminSession = async () => {
     const { data } = await supabase.auth.getSession();
     if (!data?.session) return null;
 
-    // Verify admin authorization
-    const { data: adminCheck } = await supabase
-      .from('admin_users')
-      .select('user_id')
-      .eq('user_id', data.session.user.id)
-      .single();
-
-    if (!adminCheck) {
+    // Verify admin authorization for current session user ID
+    const isAuthorized = await verifyAdminUser(data.session.user.id);
+    if (!isAuthorized) {
       await supabase.auth.signOut();
       return null;
     }
@@ -123,7 +142,6 @@ export const uploadDesignImage = async (file) => {
     throw new Error('Invalid image file provided.');
   }
 
-  // Max 10MB limit per image for web optimization
   if (file.size > 10 * 1024 * 1024) {
     throw new Error('Image size exceeds 10MB limit. Please upload a smaller photo.');
   }
@@ -199,7 +217,7 @@ export const addDesign = async ({ title, category, description, status = 'publis
   if (!category || !category.trim()) throw new Error('Category is required.');
   if (!imageFiles || imageFiles.length === 0) throw new Error('At least one image photo is required.');
 
-  // Upload all provided image files to Supabase Storage
+  // Upload image files to Supabase Storage
   const imageUrls = [];
   for (const file of imageFiles) {
     if (file instanceof File) {
@@ -231,7 +249,6 @@ export const addDesign = async ({ title, category, description, status = 'publis
 export const updateDesign = async (id, updatedFields, newImageFiles = [], removedImageUrls = []) => {
   checkSupabase();
 
-  // Upload new image files
   const newUploadedUrls = [];
   for (const file of newImageFiles) {
     if (file instanceof File) {
@@ -240,7 +257,6 @@ export const updateDesign = async (id, updatedFields, newImageFiles = [], remove
     }
   }
 
-  // Calculate final image list
   let existingImages = updatedFields.images || [];
   existingImages = existingImages.filter((img) => !removedImageUrls.includes(img));
   const finalImages = [...existingImages, ...newUploadedUrls];

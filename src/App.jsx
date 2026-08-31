@@ -26,7 +26,8 @@ import AdminAddDesign from './pages/admin/AdminAddDesign';
 import AdminManageDesigns from './pages/admin/AdminManageDesigns';
 import AdminManageCategories from './pages/admin/AdminManageCategories';
 
-import { getAdminSession } from './services/cmsService';
+import { getAdminSession, verifyAdminUser, logoutAdmin } from './services/cmsService';
+import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -93,9 +94,30 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocation);
   }, []);
 
-  // Check Admin session on mount
+  // Check & verify Admin session on mount
   useEffect(() => {
     checkAuthStatus();
+
+    // Subscribe to Supabase auth state change events
+    if (isSupabaseConfigured && supabase) {
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user) {
+          const isAuthorized = await verifyAdminUser(session.user.id);
+          if (isAuthorized) {
+            setAdminSession(session);
+          } else {
+            setAdminSession(null);
+          }
+        } else {
+          setAdminSession(null);
+        }
+        setCheckingAuth(false);
+      });
+
+      return () => {
+        authListener?.subscription?.unsubscribe();
+      };
+    }
   }, []);
 
   const checkAuthStatus = async () => {
@@ -152,7 +174,7 @@ export default function App() {
       );
     }
 
-    // Unauthenticated access -> Shows Admin Login Screen
+    // Unauthenticated or unauthorized access -> Shows Admin Login Screen
     if (!adminSession) {
       return (
         <AdminLogin
@@ -183,7 +205,10 @@ export default function App() {
         activeTab={adminTab}
         setActiveTab={handleAdminTabChange}
         session={adminSession}
-        onLogout={() => setAdminSession(null)}
+        onLogout={async () => {
+          await logoutAdmin();
+          setAdminSession(null);
+        }}
         onNavigatePublic={handleReturnToPublicView}
       >
         {renderAdminTabContent()}

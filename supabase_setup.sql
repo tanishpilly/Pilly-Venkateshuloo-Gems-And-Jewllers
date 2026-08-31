@@ -14,13 +14,22 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
 -- Enable RLS on admin_users table
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
--- Policy: Admins can view the admin_users table
-DROP POLICY IF EXISTS "Admins can view admin_users" ON public.admin_users;
-CREATE POLICY "Admins can view admin_users"
+-- Policy: Authenticated users can SELECT from admin_users to verify their admin status
+DROP POLICY IF EXISTS "Authenticated users can select admin_users" ON public.admin_users;
+CREATE POLICY "Authenticated users can select admin_users"
     ON public.admin_users
     FOR SELECT
     TO authenticated
-    USING (auth.uid() = user_id);
+    USING (true);
+
+-- Policy: Only admins can insert/update/delete admin_users
+DROP POLICY IF EXISTS "Admins can manage admin_users" ON public.admin_users;
+CREATE POLICY "Admins can manage admin_users"
+    ON public.admin_users
+    FOR ALL
+    TO authenticated
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Helper Function: Returns TRUE if the current user is an authorized admin
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -140,21 +149,3 @@ CREATE POLICY "Admins can delete jewellery images"
     FOR DELETE
     TO authenticated
     USING (bucket_id = 'jewellery-designs' AND public.is_admin());
-
--- ==============================================================================
--- INSTRUCTIONS TO REGISTER THE FIRST ADMIN USER (pillyvenkateshuloogemsjeweller@gmail.com):
---
--- STEP A: Create User in Supabase Auth
--- 1. Go to Supabase Dashboard -> Authentication -> Users.
--- 2. Click "Add User" -> "Create User".
--- 3. Enter Email: pillyvenkateshuloogemsjeweller@gmail.com
--- 4. Set a strong, private password (e.g. 12+ characters).
--- 5. Copy the generated User ID (UUID) for this user.
---
--- STEP B: Grant Admin Privileges in SQL Editor
--- Run the following SQL statement (replacing 'YOUR_USER_ID_HERE' with the copied UUID):
---
--- INSERT INTO public.admin_users (user_id, email)
--- VALUES ('YOUR_USER_ID_HERE', 'pillyvenkateshuloogemsjeweller@gmail.com')
--- ON CONFLICT (email) DO NOTHING;
--- ==============================================================================
