@@ -74,28 +74,36 @@ CREATE TABLE IF NOT EXISTS public.designs (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 4. APP CONFIGURATION TABLE (FOR ONE-TIME SEED MARKER)
+CREATE TABLE IF NOT EXISTS public.app_config (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.designs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
 
--- 4. POSTGRESQL TABLE & SCHEMA PRIVILEGES (FOR SUPABASE POSTGREST DATA API)
--- Required when "Automatically expose new tables" is disabled in Supabase
+-- 5. POSTGRESQL TABLE & SCHEMA PRIVILEGES (FOR SUPABASE POSTGREST DATA API)
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
 -- Allow public customers (anon) to SELECT
 GRANT SELECT ON public.designs TO anon;
 GRANT SELECT ON public.categories TO anon;
+GRANT SELECT ON public.app_config TO anon;
 
 -- Allow authenticated users to perform SELECT, INSERT, UPDATE, DELETE at table level
--- (Row Level Security policies enforce that only authorized admins in admin_users can perform write operations)
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.designs TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.categories TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.app_config TO authenticated;
 GRANT SELECT ON public.admin_users TO authenticated;
 
 -- Grant EXECUTE on security helper function
 GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
 
--- 5. ROW LEVEL SECURITY (RLS) POLICIES FOR DESIGNS
+-- 6. ROW LEVEL SECURITY (RLS) POLICIES FOR DESIGNS
 -- PUBLIC CUSTOMERS: Read-only access restricted strictly to PUBLISHED designs (status = 'published')
 DROP POLICY IF EXISTS "Public users can view published designs" ON public.designs;
 CREATE POLICY "Public users can view published designs"
@@ -112,15 +120,21 @@ CREATE POLICY "Admins have full access to designs"
     USING (public.is_admin())
     WITH CHECK (public.is_admin());
 
--- 6. ROW LEVEL SECURITY (RLS) POLICIES FOR CATEGORIES
--- PUBLIC CUSTOMERS: Read-only access to categories
+-- 7. ROW LEVEL SECURITY (RLS) POLICIES FOR CATEGORIES & APP_CONFIG
+-- PUBLIC CUSTOMERS: Read-only access
 DROP POLICY IF EXISTS "Public users can view categories" ON public.categories;
 CREATE POLICY "Public users can view categories"
     ON public.categories
     FOR SELECT
     USING (true);
 
--- AUTHORIZED ADMINS ONLY: Can create and manage categories
+DROP POLICY IF EXISTS "Public users can view app_config" ON public.app_config;
+CREATE POLICY "Public users can view app_config"
+    ON public.app_config
+    FOR SELECT
+    USING (true);
+
+-- AUTHORIZED ADMINS ONLY: Can manage categories and app_config
 DROP POLICY IF EXISTS "Admins can manage categories" ON public.categories;
 CREATE POLICY "Admins can manage categories"
     ON public.categories
@@ -129,21 +143,26 @@ CREATE POLICY "Admins can manage categories"
     USING (public.is_admin())
     WITH CHECK (public.is_admin());
 
--- 7. STORAGE BUCKET CREATION FOR IMAGES
--- Create public bucket 'jewellery-designs' for high-resolution images
+DROP POLICY IF EXISTS "Admins can manage app_config" ON public.app_config;
+CREATE POLICY "Admins can manage app_config"
+    ON public.app_config
+    FOR ALL
+    TO authenticated
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
+
+-- 8. STORAGE BUCKET CREATION FOR IMAGES
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('jewellery-designs', 'jewellery-designs', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- STORAGE POLICIES
--- Public read access to uploaded images
 DROP POLICY IF EXISTS "Public access to jewellery images" ON storage.objects;
 CREATE POLICY "Public access to jewellery images"
     ON storage.objects
     FOR SELECT
     USING (bucket_id = 'jewellery-designs');
 
--- AUTHORIZED ADMINS ONLY: Upload images
 DROP POLICY IF EXISTS "Admins can upload jewellery images" ON storage.objects;
 CREATE POLICY "Admins can upload jewellery images"
     ON storage.objects
@@ -151,7 +170,6 @@ CREATE POLICY "Admins can upload jewellery images"
     TO authenticated
     WITH CHECK (bucket_id = 'jewellery-designs' AND public.is_admin());
 
--- AUTHORIZED ADMINS ONLY: Update images
 DROP POLICY IF EXISTS "Admins can update jewellery images" ON storage.objects;
 CREATE POLICY "Admins can update jewellery images"
     ON storage.objects
@@ -159,7 +177,6 @@ CREATE POLICY "Admins can update jewellery images"
     TO authenticated
     USING (bucket_id = 'jewellery-designs' AND public.is_admin());
 
--- AUTHORIZED ADMINS ONLY: Delete images
 DROP POLICY IF EXISTS "Admins can delete jewellery images" ON storage.objects;
 CREATE POLICY "Admins can delete jewellery images"
     ON storage.objects

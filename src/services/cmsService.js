@@ -12,7 +12,7 @@ const DEFAULT_CATEGORIES = [
   'Custom Jewellery'
 ];
 
-// Initial Catalogue Items for Seeding Supabase (Single Source of Truth)
+// Initial Catalogue Items for One-Time Seeding Migration
 const INITIAL_SEED_ITEMS = [
   {
     title: 'Bespoke Bridal Gold Haram',
@@ -145,21 +145,92 @@ const checkSupabase = () => {
 };
 
 /**
- * Automatically seeds initial catalogue items into Supabase if database has 0 items.
+ * ONE-TIME MIGRATION: Seeds initial 17 catalogue items into Supabase and uploads images to Storage.
+ * Uses persistent marker in public.app_config. CAN NEVER RUN AGAIN AFTER INITIAL SEEDING!
  */
 export const seedInitialCatalogueToSupabase = async () => {
   if (!isSupabaseConfigured || !supabase) return;
-  try {
-    const { count, error } = await supabase
-      .from('designs')
-      .select('id', { count: 'exact', head: true });
 
-    if (!error && count === 0) {
-      console.log('Seeding initial catalogue to Supabase...');
-      await supabase.from('designs').insert(INITIAL_SEED_ITEMS);
+  try {
+    // 1. Check if persistent migration marker exists in app_config
+    const { data: markerData } = await supabase
+      .from('app_config')
+      .select('value')
+      .eq('key', 'initial_catalogue_seeded')
+      .maybeSingle();
+
+    if (markerData && markerData.value === true) {
+      // Migration already executed! DO NOT SEED AGAIN EVEN IF ALL DESIGNS ARE DELETED!
+      return;
+    }
+
+    // 2. Execute one-time migration
+    console.log('Executing ONE-TIME catalogue migration to Supabase...');
+
+    // Process initial items & upload static assets into Supabase Storage
+    const itemsToInsert = [];
+
+    for (const item of INITIAL_SEED_ITEMS) {
+      const storageUrls = [];
+
+      for (const assetPath of item.images) {
+        try {
+          // Fetch local asset blob
+          const response = await fetch(assetPath);
+          if (response.ok) {
+            const blob = await response.blob();
+            const fileName = `initial_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+
+            // Upload image to Supabase Storage bucket 'jewellery-designs'
+            const { error: uploadErr } = await supabase.storage
+              .from('jewellery-designs')
+              .upload(fileName, blob, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: blob.type || 'image/jpeg',
+              });
+
+            if (!uploadErr) {
+              const { data: publicUrlData } = supabase.storage
+                .from('jewellery-designs')
+                .getPublicUrl(fileName);
+
+              if (publicUrlData?.publicUrl) {
+                storageUrls.push(publicUrlData.publicUrl);
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`Could not upload asset ${assetPath} to storage:`, err);
+        }
+
+        // Fallback to static URL if upload was restricted
+        if (storageUrls.length === 0) {
+          storageUrls.push(assetPath);
+        }
+      }
+
+      itemsToInsert.push({
+        ...item,
+        images: storageUrls,
+      });
+    }
+
+    // 3. Insert migrated items into public.designs table
+    const { error: insertErr } = await supabase
+      .from('designs')
+      .insert(itemsToInsert);
+
+    if (!insertErr) {
+      // 4. Permanently record one-time seed marker in app_config
+      await supabase
+        .from('app_config')
+        .upsert([{ key: 'initial_catalogue_seeded', value: true }]);
+
+      console.log('Initial catalogue migration completed & permanently marked.');
     }
   } catch (e) {
-    console.error('Initial seeding error:', e);
+    console.error('One-time seeding migration error:', e);
   }
 };
 
@@ -209,7 +280,7 @@ export const loginAdmin = async (email, password) => {
     throw new Error('Access Denied: Your account is not authorized for administrator access.');
   }
 
-  // Auto seed catalogue if empty upon admin login
+  // Attempt initial catalogue migration check upon admin login
   await seedInitialCatalogueToSupabase();
 
   return data.session;
@@ -306,12 +377,12 @@ export const uploadDesignImage = async (file) => {
 };
 
 // ==============================================================================
-// DESIGNS SERVICE (SUPABASE IS SINGLE SOURCE OF TRUTH)
+// DESIGNS SERVICE (DETERMINISTIC CATEGORY MATCHING)
 // ==============================================================================
 
 export const fetchPublishedDesigns = async (categoryFilter = null) => {
   if (isSupabaseConfigured && supabase) {
-    // Run seed check if empty
+    // Check one-time seed migration marker
     await seedInitialCatalogueToSupabase();
 
     let query = supabase
@@ -328,36 +399,44 @@ export const fetchPublishedDesigns = async (categoryFilter = null) => {
 
       const filterLower = categoryFilter.toLowerCase();
 
-      // Flexible Category Filtering Rules
+      // Deterministic Category Group Matching
       return data.filter((item) => {
         const itemCatLower = (item.category || '').toLowerCase();
 
         if (filterLower.includes('gold')) {
-          return itemCatLower.includes('gold') || itemCatLower.includes('custom') || itemCatLower.includes('men');
-        }
-        if (filterLower.includes('gemstone') || filterLower.includes('ruby') || filterLower.includes('emerald') || filterLower.includes('sapphire') || filterLower.includes('navratna')) {
           return (
+            itemCatLower === 'gold jewellery' ||
+            itemCatLower === 'custom jewellery' ||
+            itemCatLower === 'men\'s jewellery' ||
+            itemCatLower.includes('gold')
+          );
+        }
+        if (filterLower.includes('gemstone') || filterLower.includes('ruby') || filterLower.includes('emerald') || filterLower.includes('sapphire')) {
+          return (
+            itemCatLower === 'precious gemstones' ||
+            itemCatLower === 'semi-precious gemstones' ||
             itemCatLower.includes('gemstone') ||
             itemCatLower.includes('ruby') ||
             itemCatLower.includes('emerald') ||
             itemCatLower.includes('sapphire') ||
-            itemCatLower.includes('navratna') ||
-            itemCatLower.includes('pearl') ||
-            itemCatLower.includes('coral')
+            itemCatLower.includes('navratna')
           );
         }
         if (filterLower.includes('silver')) {
-          return itemCatLower.includes('silver');
+          return itemCatLower === 'silver jewellery' || itemCatLower.includes('silver');
         }
         if (filterLower.includes('bead') || filterLower.includes('pearl') || filterLower.includes('coral')) {
           return (
+            itemCatLower === 'beads' ||
+            itemCatLower === 'pearls' ||
+            itemCatLower === 'corals' ||
             itemCatLower.includes('bead') ||
             itemCatLower.includes('pearl') ||
             itemCatLower.includes('coral')
           );
         }
 
-        return itemCatLower.includes(filterLower) || filterLower.includes(itemCatLower);
+        return itemCatLower === filterLower;
       });
     }
   }
