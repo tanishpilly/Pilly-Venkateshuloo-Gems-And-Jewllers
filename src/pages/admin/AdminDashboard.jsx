@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAllAdminDesigns, fetchCategories } from '../../services/cmsService';
-import { PlusCircle, Layers, Grid, Eye, FileText, CheckCircle, Clock, Sparkles, ArrowRight } from 'lucide-react';
+import { PlusCircle, Layers, Grid, Eye, FileText, CheckCircle, Clock, Sparkles, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function AdminDashboard({ onNavigateTab }) {
   const [designs, setDesigns] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     loadDashboardData();
@@ -13,15 +14,17 @@ export default function AdminDashboard({ onNavigateTab }) {
 
   const loadDashboardData = async () => {
     setLoading(true);
+    setErrorMsg('');
     try {
       const [allDesigns, catList] = await Promise.all([
         fetchAllAdminDesigns(),
         fetchCategories(),
       ]);
-      setDesigns(allDesigns);
-      setCategories(catList);
+      setDesigns(allDesigns || []);
+      setCategories(catList || []);
     } catch (e) {
-      console.error(e);
+      console.error('Dashboard data load error:', e);
+      setErrorMsg(e.message || 'Failed to load dashboard data from Supabase database.');
     } finally {
       setLoading(false);
     }
@@ -32,7 +35,8 @@ export default function AdminDashboard({ onNavigateTab }) {
   const draftDesigns = designs.filter((d) => d.status === 'draft').length;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in font-sans">
+      
       {/* Header Banner */}
       <div className="bg-[#3B101C] text-white p-6 sm:p-8 rounded-3xl border border-[#C5A059]/40 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="space-y-2">
@@ -54,6 +58,22 @@ export default function AdminDashboard({ onNavigateTab }) {
           <PlusCircle className="w-5 h-5" /> Add New Design
         </button>
       </div>
+
+      {/* Error Banner */}
+      {errorMsg && (
+        <div className="p-4 bg-red-900/10 border border-red-500/30 rounded-2xl flex items-center justify-between gap-4 text-xs text-red-700 font-medium">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+          <button
+            onClick={loadDashboardData}
+            className="px-3 py-1.5 bg-red-600 text-white font-bold rounded-lg text-[11px] flex items-center gap-1 shrink-0"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Retry
+          </button>
+        </div>
+      )}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -170,16 +190,21 @@ export default function AdminDashboard({ onNavigateTab }) {
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-xs text-gray-500">Loading recent designs...</div>
+          <div className="py-8 text-center text-xs text-gray-500 font-medium animate-pulse">
+            Loading recent designs from database...
+          </div>
         ) : designs.length === 0 ? (
           <div className="py-12 text-center space-y-3 bg-[#FAF8F5] rounded-2xl border border-dashed border-gray-200">
             <Sparkles className="w-8 h-8 text-[#C5A059] mx-auto" />
-            <p className="text-sm font-semibold text-gray-700">No custom designs uploaded yet</p>
+            <p className="text-sm font-semibold text-gray-700">No designs uploaded yet.</p>
+            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+              Your database currently contains zero uploaded designs. Tap below to upload your first jewellery design.
+            </p>
             <button
               onClick={() => onNavigateTab('add-design')}
-              className="px-5 py-2.5 bg-[#3B101C] text-white text-xs font-bold uppercase rounded-xl"
+              className="px-6 py-3 bg-[#3B101C] hover:bg-[#2D0A14] text-white text-xs font-bold uppercase rounded-xl shadow transition-transform hover:scale-105 inline-flex items-center gap-2"
             >
-              Add Your First Design
+              <PlusCircle className="w-4 h-4 text-[#DFBA6A]" /> Add New Design
             </button>
           </div>
         ) : (

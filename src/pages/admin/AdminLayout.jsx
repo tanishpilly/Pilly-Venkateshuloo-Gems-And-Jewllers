@@ -3,7 +3,7 @@ import PVLogo from '../../components/PVLogo';
 import { LayoutDashboard, PlusCircle, Layers, Grid, LogOut, Globe, Menu, X } from 'lucide-react';
 import { logoutAdmin } from '../../services/cmsService';
 
-export default function AdminLayout({ activeTab, setActiveTab, session, onLogout, onNavigatePublic }) {
+export default function AdminLayout({ children, activeTab, setActiveTab, session, onLogout, onNavigatePublic }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -111,9 +111,9 @@ export default function AdminLayout({ activeTab, setActiveTab, session, onLogout
         )}
       </header>
 
-      {/* Main Admin Content Container */}
+      {/* Main Admin Content Container - Renders active admin view */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Child views rendered in App.jsx */}
+        {children}
       </main>
     </div>
   );
