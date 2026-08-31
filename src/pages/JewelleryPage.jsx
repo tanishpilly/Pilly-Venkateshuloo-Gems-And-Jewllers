@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GOLD_JEWELLERY_ITEMS } from '../data/collectionsData';
-import { ShieldCheck, MessageCircle, Phone, ArrowRight, Sparkles } from 'lucide-react';
+import { fetchPublishedDesigns } from '../services/cmsService';
+import { ShieldCheck, MessageCircle, Phone, ArrowRight, Sparkles, Eye } from 'lucide-react';
 import { STORE_DETAILS } from '../data/storeDetails';
 
-export default function JewelleryPage({ onOpenWhatsApp, setActiveTab }) {
+export default function JewelleryPage({ onOpenWhatsApp, setActiveTab, onSelectDesign }) {
+  const [cmsDesigns, setCmsDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadGoldDesigns();
+  }, []);
+
+  const loadGoldDesigns = async () => {
+    try {
+      const data = await fetchPublishedDesigns('Gold Jewellery');
+      setCmsDesigns(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="py-12 bg-[#FAF8F5] text-[#1C1B1A]">
       {/* Header */}
@@ -54,6 +73,69 @@ export default function JewelleryPage({ onOpenWhatsApp, setActiveTab }) {
           </div>
         </div>
       </section>
+
+      {/* Dynamic Uploaded CMS Gold Designs Section */}
+      {cmsDesigns.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-[#9E7934] text-xs font-bold uppercase tracking-[0.2em] block">
+              Store Masterpieces
+            </span>
+            <h2 className="font-serif-luxury text-3xl sm:text-4xl font-bold text-[#3B101C]">
+              Uploaded Gold Jewellery Designs
+            </h2>
+            <div className="w-16 h-0.5 bg-[#C5A059] mx-auto"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {cmsDesigns.map((design) => (
+              <div
+                key={design.id}
+                onClick={() => onSelectDesign && onSelectDesign(design)}
+                className="bg-white rounded-3xl border border-[#C5A059]/30 overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+              >
+                <div className="relative h-64 overflow-hidden bg-gray-100">
+                  <img
+                    src={design.images && design.images[0] ? design.images[0] : '/hero-jewellery.png'}
+                    alt={design.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2D0A14]/80 via-transparent to-transparent opacity-60"></div>
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-[#3B101C]/80 text-[#DFBA6A] text-[11px] font-bold uppercase rounded-full">
+                    916 Gold
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-serif-luxury text-2xl font-bold text-[#3B101C] group-hover:text-[#9E7934] transition-colors">
+                      {design.title}
+                    </h3>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-2 line-clamp-2 font-light">
+                      {design.description || 'Custom crafted 916 gold ornament made to order.'}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#3B101C] flex items-center gap-1 group-hover:underline">
+                      <Eye className="w-4 h-4 text-[#C5A059]" /> View Design Details
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenWhatsApp();
+                      }}
+                      className="px-3.5 py-2 bg-[#25D366] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> Enquire
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Showroom Collections Display */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 space-y-12">
