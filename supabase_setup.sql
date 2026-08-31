@@ -78,7 +78,24 @@ CREATE TABLE IF NOT EXISTS public.designs (
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.designs ENABLE ROW LEVEL SECURITY;
 
--- 4. ROW LEVEL SECURITY (RLS) POLICIES FOR DESIGNS
+-- 4. POSTGRESQL TABLE & SCHEMA PRIVILEGES (FOR SUPABASE POSTGREST DATA API)
+-- Required when "Automatically expose new tables" is disabled in Supabase
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+-- Allow public customers (anon) to SELECT
+GRANT SELECT ON public.designs TO anon;
+GRANT SELECT ON public.categories TO anon;
+
+-- Allow authenticated users to perform SELECT, INSERT, UPDATE, DELETE at table level
+-- (Row Level Security policies enforce that only authorized admins in admin_users can perform write operations)
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.designs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.categories TO authenticated;
+GRANT SELECT ON public.admin_users TO authenticated;
+
+-- Grant EXECUTE on security helper function
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
+
+-- 5. ROW LEVEL SECURITY (RLS) POLICIES FOR DESIGNS
 -- PUBLIC CUSTOMERS: Read-only access restricted strictly to PUBLISHED designs (status = 'published')
 DROP POLICY IF EXISTS "Public users can view published designs" ON public.designs;
 CREATE POLICY "Public users can view published designs"
@@ -95,7 +112,7 @@ CREATE POLICY "Admins have full access to designs"
     USING (public.is_admin())
     WITH CHECK (public.is_admin());
 
--- 5. ROW LEVEL SECURITY (RLS) POLICIES FOR CATEGORIES
+-- 6. ROW LEVEL SECURITY (RLS) POLICIES FOR CATEGORIES
 -- PUBLIC CUSTOMERS: Read-only access to categories
 DROP POLICY IF EXISTS "Public users can view categories" ON public.categories;
 CREATE POLICY "Public users can view categories"
@@ -112,7 +129,7 @@ CREATE POLICY "Admins can manage categories"
     USING (public.is_admin())
     WITH CHECK (public.is_admin());
 
--- 6. STORAGE BUCKET CREATION FOR IMAGES
+-- 7. STORAGE BUCKET CREATION FOR IMAGES
 -- Create public bucket 'jewellery-designs' for high-resolution images
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('jewellery-designs', 'jewellery-designs', true)
